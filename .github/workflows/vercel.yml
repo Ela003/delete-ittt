@@ -42,7 +42,7 @@ jobs:
 
       # Check JavaScript
       - name: Check JavaScript
-        run: test -f script.js
+        run: test -f test.js
 
       # CI success
       - name: CI Success
