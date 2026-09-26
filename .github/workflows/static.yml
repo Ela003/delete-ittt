@@ -18,9 +18,9 @@ concurrency:
 
 jobs:
 
-  # ========================================
-  # GitHub Pages
-  # ========================================
+  # ==========================================
+  # 1. GITHUB PAGES
+  # ==========================================
   github-pages:
     name: Deploy to GitHub Pages
 
@@ -32,7 +32,7 @@ jobs:
 
     steps:
 
-      # 1. Get code
+      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v6
 
@@ -40,21 +40,21 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      # 3. Upload website
+      # 3. Upload website files
       - name: Upload website files
         uses: actions/upload-pages-artifact@v4
         with:
           path: "."
 
-      # 4. Deploy GitHub Pages
+      # 4. Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
 
-  # ========================================
-  # Vercel
-  # ========================================
+  # ==========================================
+  # 2. VERCEL
+  # ==========================================
   vercel:
     name: Deploy to Vercel
 
@@ -62,14 +62,24 @@ jobs:
 
     steps:
 
-      # 1. Get code
+      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      # 2. Install Vercel CLI
+      # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 3. Install Vercel CLI
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      # 3. Deploy to Vercel
+      # 4. Deploy to Vercel
       - name: Deploy to Vercel
-        run: vercel deploy --prod --yes --token="${{ secrets.VERCEL_TOKEN }}"
+        run: |
+          vercel deploy \
+            --prod \
+            --yes \
+            --token="${{ secrets.VERCEL_TOKEN }}"
