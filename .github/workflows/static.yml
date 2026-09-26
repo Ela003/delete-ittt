@@ -1,7 +1,11 @@
-name: Deploy Website
+name: Vercel CI
 
 on:
   push:
+    branches:
+      - main
+
+  pull_request:
     branches:
       - main
 
@@ -9,74 +13,72 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "deploy"
-  cancel-in-progress: false
 
 jobs:
 
-  # ==========================================
-  # 1. GITHUB PAGES
-  # ==========================================
-  github-pages:
-    name: Deploy to GitHub Pages
-
-    runs-on: ubuntu-latest
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-
-      # 1. Checkout repository
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      # 2. Configure GitHub Pages
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
-      # 3. Upload website files
-      - name: Upload website files
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: "."
-
-      # 4. Deploy to GitHub Pages
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-
-  # ==========================================
-  # 2. VERCEL
-  # ==========================================
-  vercel:
-    name: Deploy to Vercel
+  # ========================================
+  # 1. CI TEST
+  # ========================================
+  test:
+    name: Run CI Test
 
     runs-on: ubuntu-latest
 
     steps:
 
-      # 1. Checkout repository
+      # Get GitHub repository
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      # 2. Setup Node.js
+      # Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      # 3. Install Vercel CLI
+      # Check HTML
+      - name: Check HTML
+        run: test -f index.html
+
+      # Check JavaScript
+      - name: Check JavaScript
+        run: test -f script.js
+
+      # CI success
+      - name: CI Success
+        run: echo "CI tests passed"
+
+
+  # ========================================
+  # 2. VERCEL DEPLOY
+  # ========================================
+  deploy:
+    name: Deploy to Vercel
+
+    runs-on: ubuntu-latest
+
+    needs: test
+
+    # Deploy only after push to main
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+
+      # Get GitHub repository
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Install Vercel CLI
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      # 4. Deploy to Vercel
+      # Deploy to Vercel
       - name: Deploy to Vercel
         run: |
           vercel deploy \
